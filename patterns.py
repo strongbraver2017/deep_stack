@@ -68,7 +68,7 @@ class GroupPattern:
     suit_set = set()    #花色值域
     value_set = set()   #牌面大小值域
     value_map = {}
-
+    name = 'Basic Pattern'
 
     def __init__(self,name,five_cards):
         self.name = name     #牌型名称
@@ -80,6 +80,7 @@ class GroupPattern:
         self.value_set = set(self.value_list)
         for uni_val in self.value_set:
             self.value_map[uni_val] = self.value_list.count(uni_val)
+        self.judge_result = self.judge()
 
     def _judge(self):
         if len(self.five_cards) != 5:
@@ -88,7 +89,27 @@ class GroupPattern:
     def judge(self):
         pass
 
+    def raise_TypeError(self):
+        raise TypeError(
+            'Just {} judged, the function could be executed.' \
+                .format(self.name)
+        )
 
+    def get_x_value(self,count,list=False,need_check=True):
+        if not self.judge_result and need_check:
+            self.raise_TypeError()
+        keys = []
+        for key in self.value_map.keys():
+            if self.value_map[key] == count:
+                if not list:
+                    return key
+                else:
+                    keys.append(key)
+        return keys
+
+    @property
+    def max_val(self):
+        return max(*self.value_set)
 
 '''
     以下为具体牌型
@@ -107,33 +128,20 @@ class FullHouse(GroupPattern):
             name = self.name,
             five_cards = five_cards
         )
-        self.judge_result = self.judge()
 
     def judge(self):
         self._judge()
         return len(self.value_set)==2 and \
                max(*self.value_map.values())==3
-              #四条时最大相同键数应为4
+              #四条时最大相同值的键数应为4
 
     @property
     def the_three_Value(self):
-        if self.judge_result:
-            return max(*self.value_set)
-        else:
-            raise TypeError(
-                'Just {} judged, the function could be executed.' \
-                    .format(self.name)
-            )
+        return self.get_x_value(count=3)
 
     @property
     def the_two_Value(self):
-        if self.judge_result:
-            return min(*self.value_set)
-        else:
-            raise TypeError(
-                'Just {} judged, the function could be executed.' \
-                    .format(self.name)
-            )
+         return self.get_x_value(count=2)
 
 
 class Flush(GroupPattern):
@@ -147,17 +155,194 @@ class Flush(GroupPattern):
             name = self.name,
             five_cards = five_cards
         )
-        self.judge_result = self.judge()
 
     def judge(self):
         self._judge()
         return len(self.suit_set)==1
 
+
+class FourOfOneKind(GroupPattern):
+    '''
+        四条
+    '''
+    name = 'Four Of One Kind'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+            name=self.name,
+            five_cards=five_cards
+          )
+
+    def judge(self):
+        self._judge()
+        return len(self.suit_set) == 2 and \
+           max(*self.value_map.values())==4
+
     @property
-    def max_val(self):
-        if not self.judge_result:
-            raise TypeError(
-                'Just {} judged, the function could be executed.'\
-                    .format(self.name)
-            )
-        return max(*self.value_set)
+    def the_four_Value(self):
+        return self.get_x_value(count=4)
+
+    @property
+    def the_one_Value(self):
+        return self.get_x_value(count=1)
+
+
+class Straight(GroupPattern):
+    '''
+        顺子
+    '''
+    name = 'Straight'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+            name=self.name,
+            five_cards=five_cards
+          )
+
+    def judge(self):
+        self._judge()
+        #一是首尾之差为4，二是无重复元素
+        return max(*self.value_set)-min(*self.value_set)==4 and\
+                len(self.value_set) == 5
+
+
+class StraightFlush(GroupPattern):
+    '''
+        同花顺
+    '''
+    name = 'Straight Flush'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+            name=self.name,
+            five_cards=five_cards
+          )
+
+    def judge(self):
+        self._judge()
+        return Straight(self.five_cards).judge_result and\
+            Flush(self.five_cards).judge_result
+
+
+class RoyalFlush(GroupPattern):
+    '''
+        皇家同花顺
+    '''
+    name = 'RoyalFlush'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+            five_cards = five_cards,
+            name=self.name
+        )
+
+    def judge(self):
+        self._judge()
+        return StraightFlush(self.five_cards).judge_result and\
+            self.max_val == 14
+
+
+class Set(GroupPattern):
+    '''
+        三条
+    '''
+    name = 'Set'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+              five_cards=five_cards,
+              name=self.name
+        )
+
+    def judge(self):
+        self._judge()
+        return 1 in self.value_map.values() and \
+               3 in self.value_map.values()
+
+    @property
+    def the_three_Value(self):
+        return self.get_x_value(count=3)
+
+    @property
+    def the_one_Value(self):
+        return max(*self.get_x_value(count=1,list=True))
+
+
+class TwoPairs(GroupPattern):
+    '''
+        两对
+    '''
+    name = 'Two Pairs'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+              five_cards=five_cards,
+              name=self.name
+        )
+
+    def judge(self):
+        self._judge()
+        return len(
+            self.get_x_value(count=2,list=True)
+        )==2
+
+    @property
+    def the_big_pair_Value(self):
+        return max(*self.get_x_value(count=2, list=True))
+
+    @property
+    def the_small_pair_Value(self):
+        return min(*self.get_x_value(count=2, list=True))
+
+    @property
+    def the_single_Value(self):
+        return self.get_x_value(count=1)
+
+
+class OnePairs(GroupPattern):
+    '''
+        一对
+    '''
+    name = 'One Pair'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+              five_cards=five_cards,
+              name=self.name
+        )
+
+    def judge(self):
+        self._judge()
+        return len(self.get_x_value(count=2,list=True))==1 and \
+                len(self.get_x_value(count=1,list=True))==3
+
+    @property
+    def the_pair_Value(self):
+        return self.get_x_value(count=2)
+
+    @property
+    def the_single_Values(self):
+        return self.get_x_value(count=1,list=True,need_check=False)
+
+
+class HighCard(GroupPattern):
+    '''
+        高牌
+    '''
+    name = 'High Card'
+
+    def __init__(self,five_cards):
+        GroupPattern.__init__(self,
+              five_cards=five_cards,
+              name=self.name
+        )
+
+    def judge(self):
+        self._judge()
+        return len(self.get_x_value(count=1,list=True))==5 and \
+            not Straight(self.five_cards).judge_result and \
+            not Flush(self.five_cards).judge_result
+
+    @property
+    def the_single_Values(self):
+        return self.get_x_value(count=1, list=True, need_check=False)
