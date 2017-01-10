@@ -14,10 +14,10 @@ from patterns import *
 
 
 class JudgeModel:
-    def __init__(self,cards):
-        self.cards = cards
-
-    def judge(self,five_cards):
+    def get_type(self,five_cards):
+        if len(five_cards)!=5:
+            raise ValueError(
+                'Just support five cards judged.')
         for pattern in [
             RoyalFlush, StraightFlush, FourOfOneKind,
             FullHouse, Flush, Straight,
@@ -27,5 +27,5 @@ class JudgeModel:
             if test_model.judge_result:
                 print('{}:\t{}'.format(
                     test_model.name,five_cards))
-                return test_model.name
-
+                return test_model
+            return None
