@@ -48,14 +48,15 @@ class GameCards:
 
 GroupMap = {
     'High Card': 1,
-    'Two Pairs': 2,
-    'Set': 3,
-    'Straight': 4,
-    'Flush': 5,
-    'Full House': 6,
-    'Four Of One Kind': 7,
-    'Straight Flush': 8,
-    'Royal Flush': 9
+    'One Pair': 2,
+    'Two Pairs': 3,
+    'Set': 4,
+    'Straight': 5,
+    'Flush': 6,
+    'Full House': 7,
+    'Four Of One Kind': 8,
+    'Straight Flush': 9,
+    'Royal Flush': 10
 }
 
 
