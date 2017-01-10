@@ -185,7 +185,7 @@ class FourOfOneKind(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.suit_set) == 2 and \
+        return len(self.value_set) == 2 and \
            max(*self.value_map.values())==4
 
     @property
