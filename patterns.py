@@ -11,19 +11,28 @@
 """
 
 
-
 class CardPattern:
     '''
         单元牌型
     '''
+    NameMap = {
+        11: 'J',
+        12: 'Q',
+        13: 'K',
+        14: 'A'
+    }
+
     def __init__(self,val,suit):
         self.value = val   #牌面数值
         self.suit = suit   #花色
 
     def __repr__(self):
+        value = self.value
+        if self.value in self.NameMap.keys():
+            value = self.NameMap[self.value]
         return (
-            "<UnitCard(value={},suit={})>"
-        ).format(self.value,self.suit)
+            "{}{}"
+        ).format(value,self.suit[0])
 
 
 class GameCards:
@@ -33,7 +42,7 @@ class GameCards:
     ValueMap = list(range(2, 15))
     # 数值域
 
-    SuitMap = ['heart', 'heart', 'clover', 'diamond']
+    SuitMap = ['heart', 'spade', 'clover', 'diamond']
     # 花色域
 
     def to_arr(self):
@@ -68,7 +77,6 @@ class GroupPattern:
     value_list = []
     suit_set = set()    #花色值域
     value_set = set()   #牌面大小值域
-    value_map = {}
     name = 'Basic Pattern'
 
     def __init__(self,name,five_cards):
@@ -79,6 +87,7 @@ class GroupPattern:
         self.suit_set = set(self.suit_list)
         self.value_list = [card.value for card in self.five_cards]
         self.value_set = set(self.value_list)
+        self.value_map = {}
         for uni_val in self.value_set:
             self.value_map[uni_val] = self.value_list.count(uni_val)
         self.judge_result = self.judge()
@@ -88,7 +97,7 @@ class GroupPattern:
             raise ValueError('Just judge pattern of 5 cards group')
 
     def judge(self):
-        pass
+        print('execute basic judge , pls check it.')
 
     def raise_TypeError(self):
         raise TypeError(
@@ -97,7 +106,7 @@ class GroupPattern:
         )
 
     def get_x_value(self,count,list=False,need_check=True):
-        if not self.judge_result and need_check:
+        if need_check and not self.judge_result:
             self.raise_TypeError()
         keys = []
         for key in self.value_map.keys():
@@ -229,7 +238,7 @@ class RoyalFlush(GroupPattern):
     '''
         皇家同花顺
     '''
-    name = 'RoyalFlush'
+    name = 'Royal Flush'
 
     def __init__(self,five_cards):
         GroupPattern.__init__(self,
@@ -284,7 +293,7 @@ class TwoPairs(GroupPattern):
     def judge(self):
         self._judge()
         return len(
-            self.get_x_value(count=2,list=True)
+            self.get_x_value(count=2,list=True,need_check=False)
         )==2
 
     @property
@@ -300,7 +309,7 @@ class TwoPairs(GroupPattern):
         return self.get_x_value(count=1)
 
 
-class OnePairs(GroupPattern):
+class OnePair(GroupPattern):
     '''
         一对
     '''
@@ -314,8 +323,8 @@ class OnePairs(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.get_x_value(count=2,list=True))==1 and \
-                len(self.get_x_value(count=1,list=True))==3
+        return len(self.get_x_value(count=2,list=True,need_check=False))==1 and \
+                len(self.get_x_value(count=1,list=True,need_check=False))==3
 
     @property
     def the_pair_Value(self):
@@ -340,7 +349,7 @@ class HighCard(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.get_x_value(count=1,list=True))==5 and \
+        return len(self.get_x_value(count=1,list=True,need_check=False))==5 and \
             not Straight(self.five_cards).judge_result and \
             not Flush(self.five_cards).judge_result
 
