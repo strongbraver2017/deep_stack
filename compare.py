@@ -22,30 +22,37 @@ class CompareModel:
         self.A = engine.get_type(five_cards_A)
         self.B = engine.get_type(five_cards_B)
 
+    @property
     def A_stronger_than_B(self):
         if None not in [self.A, self.B]:
             if self.A.name != self.B.name:
                 return GroupMap[self.A.name] > GroupMap[self.B.name]
             else:
                 public_type = self.A.name
+
+                if public_type=='Set':
+                    if self.A.the_three_Value != self.B.the_three_Value:
+                        return self.A.the_three_Value > self.B.the_three_Value
+
+                if public_type=='One Pair':
+                    if self.A.the_pair_Value != self.B.the_pair_Value:
+                        return self.A.the_pair_Value > self.B.the_pair_Value
+
                 if public_type in [
+                    'Set',
+                    'One Pair',
                     'High Card',
                     'Straight',
                     'Flush',
                     'Straight Flush',
                     'Royal Flush'
                 ]:
-                    if self.A.max_val==self.B.max_val:
-                        return 'draw'
-                    else:
-                        return self.A.max_val > self.B.max_val
-
-                if public_type=='One Pair':
-                    if self.A.the_pair_Value != self.B.the_pair_Value:
-                        return self.A.the_pair_Value > self.B.the_pair_Value
-                    for i in range(len(self.A.the_single_Values)):
-                        if self.A.the_single_Values[i] != self.B.the_single_Values[i]:
-                             return self.A.the_single_Values[i] > self.B.the_single_Values[i]
+                    #对single value非常多的做统一的倒序+循环比较处理
+                    A_single_values = self.A.the_single_Values
+                    B_single_values = self.B.the_single_Values
+                    for i in range(len(A_single_values)):
+                        if A_single_values[i] != B_single_values[i]:
+                            return A_single_values[i] > B_single_values[i]
                     return 'draw'
 
                 if public_type=='Two Pairs':
@@ -74,12 +81,5 @@ class CompareModel:
                     else:
                         return 'draw'
 
-                if public_type=='Set':
-                    if self.A.the_three_Value != self.B.the_three_Value:
-                        return self.A.the_three_Value > self.B.the_three_Value
-                    for i in range(len(self.A.the_single_Values)):
-                        if self.A.the_single_Values[i] != self.B.the_single_Values[i]:
-                             return self.A.the_single_Values[i] > self.B.the_single_Values[i]
-                    return 'draw'
         else:
             raise TypeError('At least One of A or B cant be judged which group belongs to.')
