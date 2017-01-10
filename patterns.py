@@ -16,6 +16,7 @@ class CardPattern:
         单元牌型
     '''
     NameMap = {
+        10: 'T',
         11: 'J',
         12: 'Q',
         13: 'K',
@@ -52,7 +53,6 @@ class GameCards:
                 card = CardPattern(val,suit)
                 cards.append(card)
         return cards
-
 
 
 GroupMap = {
@@ -120,6 +120,13 @@ class GroupPattern:
     @property
     def max_val(self):
         return max(*self.value_set)
+
+    @property
+    def the_single_Values(self):
+        vals = self.get_x_value(
+            count=1,list=True,need_check=False)
+        vals.sort()
+        return vals.reverse()
 
 '''
     以下为具体牌型
@@ -273,9 +280,6 @@ class Set(GroupPattern):
     def the_three_Value(self):
         return self.get_x_value(count=3)
 
-    @property
-    def the_one_Value(self):
-        return max(*self.get_x_value(count=1,list=True))
 
 
 class TwoPairs(GroupPattern):
@@ -330,10 +334,6 @@ class OnePair(GroupPattern):
     def the_pair_Value(self):
         return self.get_x_value(count=2)
 
-    @property
-    def the_single_Values(self):
-        return self.get_x_value(count=1,list=True,need_check=False)
-
 
 class HighCard(GroupPattern):
     '''
@@ -352,7 +352,3 @@ class HighCard(GroupPattern):
         return len(self.get_x_value(count=1,list=True,need_check=False))==5 and \
             not Straight(self.five_cards).judge_result and \
             not Flush(self.five_cards).judge_result
-
-    @property
-    def the_single_Values(self):
-        return self.get_x_value(count=1, list=True, need_check=False)
