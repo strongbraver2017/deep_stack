@@ -148,7 +148,9 @@ class GroupPattern:
         vals = self.get_x_value(
             count=1,list=True,need_check=False)
         vals.sort()
-        return vals.reverse()
+        vals.reverse()
+        print(vals)
+        return vals
 
 '''
     以下为具体牌型
@@ -257,8 +259,9 @@ class Straight(GroupPattern):
                 len(self.value_set) == 5
 
     def __repr__(self):
-        val = self.trans_val(self.max_val)
-        return 'Straight , {} to {}'.format(val-4,val)
+        val1 = self.trans_val(self.max_val)
+        val2 = self.trans_val(self.max_val-4)
+        return 'Straight , {} to {}'.format(val2,val1)
 
 
 class StraightFlush(GroupPattern):
