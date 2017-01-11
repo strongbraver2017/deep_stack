@@ -165,6 +165,7 @@ class Game:
                 winners.append(seat.player)
             if self.dealer.A_stronger_than_B == True:
                 winners.remove(winners[0])
+                vvvvvv
         self.liquidate(winners)
 
         self.table.cancel()
