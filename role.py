@@ -7,7 +7,7 @@
 @editor:    PyCharm Mac
 @create:    2017/1/11 01:32
 @description:
-        牌桌上的各种角色
+        赌场里的各种角色
 """
 
 class Seat:
@@ -38,6 +38,14 @@ class Seat:
         self.status = 'free'
         self.player.status = 'free'
         self.player = None
+
+    def __repr__(self):
+        return (
+            'Seat [{}]( {} ): ${} \n'
+        ).format(
+            self.table_index, self.player.name,
+            self.player.stack
+        )
 
 
 class Table:
@@ -79,6 +87,17 @@ class Table:
                 return seat
         return None
 
+    def __repr__(self):
+        seat_str = ''
+        for seat in self.seats:
+            seat_str += seat.__repr__()
+        return (
+            '______________ Table {} _________________\n'
+            '{}'
+            '_________________________________________'
+        ).format(self.id, seat_str)
+
+
 class Casino:
     '''
         赌场/平台
@@ -106,19 +125,20 @@ class Player:
 
     id = random.choice(range(1000))
     name = None
-    stack = None
+    stack = 0
     level = None
     place = 'BTN'
     status = 'free'
-    chose_seat_index = 0
-    chose_buyin = 100
+    account_chips = None
+    hands = []
 
-    def __init__(self,chose_seat_index,chose_buyin,
-                    id=0,name=None,level=100,
-                 ):
-        self.name = 'Robot-{}'.format(self.id)
-        self.chose_buyin = chose_buyin
-        self.chose_seat_index = chose_seat_index
+    def __init__(self,id=0,name=None,level=100):
+        if name==None:
+            self.name = 'Robot-{}'.format(self.id)
+        else:
+            self.name = name
+        self.id = id
+        self.level = level
 
 
 class Operation:
@@ -129,28 +149,5 @@ class Operation:
     add_size = 0
 
 
-class Game:
-    '''
-        德州牌局
-    '''
-    table = None    #table->seat->player
-    status = None
-    cards_machine = None
 
-    def __init__(self,casino,big_blind):
-        self.table = casino.get_free_table()
-        self.table.big_blind = big_blind
 
-    def add_player(self,player,chose_seat_index):
-        seat = self.table.get_specific_seat(chose_seat_index)
-        seat.sit(player)
-
-    def rm_seat(self,seat_index):
-        seat = self.table.get_specific_seat(seat_index)
-        seat.go()
-
-    def begin(self):
-        self.table.occupy()
-
-    def end(self):
-        self.table.cancel()
