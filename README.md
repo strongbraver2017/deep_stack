@@ -2,12 +2,12 @@
 
 ### patterns.py 
 > 对各种牌型的现实描述及逻辑描述
-> 通过 test_patterns_judge 模块测试
-
-![](http://wx1.sinaimg.cn/large/a0695fdfly1fblq5tmwpbj20xy1bstp4.jpg)
 
 ### judge.py
 > 对某五张组合的牌型判断
+> 通过 test_patterns_judge 模块测试
+
+![](http://wx1.sinaimg.cn/large/a0695fdfly1fblq5tmwpbj20xy1bstp4.jpg)
 
 
 ### compare.py
