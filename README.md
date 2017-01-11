@@ -15,3 +15,9 @@
 > 通过 test_compare 模块测试
 
 ![](http://ww2.sinaimg.cn/large/a0695fdfgw1fbmz3e6e2uj20lo154qfg.jpg)
+
+### roles.py
+> 抽象出关于德州赌局的各种角色
+
+### game.py
+> 精准描绘游戏逻辑，从发牌前下大小盲，到最后的清算。是否是主体，得看老子怎样看待这份程序，如果是为了模拟游戏交互的流程，那么是。如果是为了探究AI的算法，这模块包括之后的建库，webserver响应，前台UI的绘制，都是side part。
