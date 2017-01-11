@@ -7,7 +7,7 @@
 @editor:    PyCharm Mac
 @create:    2017/1/11 01:32
 @description:
-        赌场里的各种角色
+        德州扑克游戏里的各种角色
 """
 
 class Seat:
@@ -55,7 +55,7 @@ class Table:
     id = 0
     big_blind = 100
     seats = []
-    pot_size = None
+    pot_size = 0
     status = 'free'
     seat_size = 12
 
@@ -76,10 +76,12 @@ class Table:
         return 20 * self.big_blind
 
     def occupy(self):
+        self.pot_size = 0
         self.status = 'busy'
 
     def cancel(self):
         self.status = 'free'
+        self.pot_size = 0
 
     def get_specific_seat(self,seat_index):
         for seat in self.seats:
@@ -147,6 +149,8 @@ class Operation:
     '''
     name = "Bet"
     add_size = 0
+
+
 
 
 

@@ -14,7 +14,10 @@ from judge import JudgeModel
 from patterns import GroupMap
 
 class CompareModel:
-    def __init__(self,five_cards_A,five_cards_B):
+    A = None
+    B = None
+
+    def get(self,five_cards_A,five_cards_B):
         if len(five_cards_A)!=5 or\
                 len(five_cards_B)!=5:
             raise ValueError('Just support five cards compared.')
