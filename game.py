@@ -24,6 +24,7 @@ class Game:
     pot_players = []                #底池中的玩家，缓冲区
     public_pot_cards = []           #公共牌缓冲区
 
+
     def __init__(self,casino,big_blind):
         self.table = casino.get_free_table()
         self.table.big_blind = big_blind
@@ -75,16 +76,22 @@ class Game:
         player.account_chips += quantity
         player.stack -= quantity
 
-    def send_cards(self,count):
-        for seat in self.table.seats:
-            if seat.player == None:
-                continue
-            seat.player.hands = self.get_x_free_cards(2)
+    def send_cards(self,count,
+            to_players=False,to_public_area=False):
+        if to_players:
+            for seat in self.table.seats:
+                if seat.player == None:
+                    continue
+                seat.player.hands = self.get_x_free_cards(count)
+        if to_public_area:
+            self.public_pot_cards = self.get_x_free_cards(count)
 
     def open(self):
         self.table.occupy()
         self.status = 'open'
-        self.send_cards(2)
+        self.send_cards(count=2,to_players=True)
+        self.send_cards(count=3,to_public_area=True)
+        self.table.pot_size = 3 * self.table.big_blind
 
 
     def flop(self):
