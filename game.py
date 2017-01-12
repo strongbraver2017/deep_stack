@@ -174,25 +174,44 @@ class Game:
             operate = operation_map[operation_index]
             operate(*[player,quantity])
 
-    def open(self):
+    def basic_process(self,status_name,count,
+            cards_to_players=False,cards_to_area=False):
         self.table.clear_just_now_buffer()
-        self.status = 'open'
-        self.send_cards(count=2,to_players=True)
+        self.status = status_name
+        self.send_cards(
+            count = count,
+            to_players = cards_to_players,
+            to_public_area = cards_to_area
+        )
+        self.bet_process()
+
+    def open(self):
+        self.basic_process(
+            status_name = 'open',
+            count = 2,
+            cards_to_players = True
+        )
 
     def flop(self):
-        self.table.clear_just_now_buffer()
-        self.status = 'flop'
-        self.send_cards(count=3, to_public_area=True)
+        self.basic_process(
+            status_name = 'flop',
+            count = 3,
+            cards_to_area = True
+        )
 
     def turn(self):
-        self.table.clear_just_now_buffer()
-        self.status = 'turn'
-        self.send_cards(count=1, to_public_area=True)
+        self.basic_process(
+            status_name = 'turn',
+            count = 1,
+            cards_to_players = True
+        )
 
     def river(self):
-        self.table.clear_just_now_buffer()
-        self.status = 'river'
-        self.send_cards(count=1,to_public_area=True)
+        self.basic_process(
+            status_name = 'river',
+            count = 1,
+            cards_to_players = True
+        )
 
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
@@ -200,24 +219,9 @@ class Game:
         pass
 
     def end(self):
-        """   需要对牌力做排序 建立牌力与玩家间的哈希表   """
-        rank_players = [self.game_queue[0],]
-        for seat in self.game_queue[1:]:
-            for i in range(len(self.game_queue)):
-                self.dealer.get(
-                    five_cards_A=seat.player.hands,
-                    five_cards_B=rank_players[i].hands
-                )
-                if self.dealer.A_stronger_than_B in ['draw',True]:
-                    rank_players.insert(i,seat)
-                    break
-                else:
-                    if i==len(self.game_queue)-1:
-                        rank_players.append(seat)
-
-        self.liquidate(rank_players)
-        """ 以上可得到所有的赢家列表，后交于荷官清算 """
-
+        """ 清算所有底池 """
+        for pot in self.table.pots:
+            pot.liquidate()
         self.table.cancel()
         self.status = 'free'
 
