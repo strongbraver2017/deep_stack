@@ -11,9 +11,7 @@
 """
 
 class Seat:
-    '''
-        座位
-    '''
+    """ 座位 """
     index = None
     player = None
     status = 'free'
@@ -149,6 +147,16 @@ class Player:
             self.name = name
         self.id = id
         self.level = level
+
+    def cmd_operate(self):
+        operation_index = input('operation_index: ?')
+        quantity = input('quantity: ?')
+        return (operation_index,quantity)
+
+    def cmd_if_call(self,quantity):
+        call = input('if call {}?'.format(quantity))
+        return call
+
 
 
 class Pot:

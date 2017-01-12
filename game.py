@@ -9,6 +9,8 @@
 @description:
         保存德州扑克游戏逻辑
 """
+from role import Pot
+
 
 class Game:
     '''
@@ -16,7 +18,6 @@ class Game:
     '''
     from patterns import GameCards
     from compare import CompareModel
-    from role import Pot
 
     table = None                    #table->seat->player
     status = None                   #游戏进度
@@ -94,11 +95,10 @@ class Game:
 
     def bet(self,player,quantity):
         player.stack -= quantity
-        call_val = 0
+        self.last_quantity = quantity
         if self.table.sb_allin_just_now and\
                 self.table.previous_allin_value < quantity:
             """ 新建底池,并添加该玩家入池 """
-            from role import Pot
             new_pot = Pot()
             new_pot.players.append(player)
             self.table.pots.append(new_pot)
@@ -127,8 +127,15 @@ class Game:
     def fold(self,player):
         self.game_queue.remove(player)
 
-    def call(self,player,last_quantity,raise_to):
-        self.bet(player,raise_to-last_quantity)
+    def call(self,player,quantity):
+        self.bet(player,quantity)
+
+    def raise_(self,player,raise_to):
+        self.bet(player,raise_to)
+        delta = raise_to-self.last_quantity
+        call = player.cmd_if_call(delta)
+        if call:
+            self.call(player,delta)
 
     def before_open(self):
         self.table.occupy()
@@ -154,6 +161,18 @@ class Game:
                 continue
             seat.player.game_init_stack = seat.player.stack
             self.game_queue.append(seat)
+
+    def bet_process(self):
+        operation_map = {
+            'b': self.bet,
+            'c': self.call,
+            'f': self.fold,
+            'r': self.raise_,
+        }
+        for player in self.game_queue:
+            operation_index, quantity = player.operate()
+            operate = operation_map[operation_index]
+            operate(*[player,quantity])
 
     def open(self):
         self.table.clear_just_now_buffer()
@@ -210,3 +229,7 @@ class Game:
 
         self.table.cancel()
         self.status = 'free'
+
+    def begin(self):
+        self.before_open()
+        self.end()
