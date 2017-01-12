@@ -194,15 +194,6 @@ class Game:
         self.status = 'river'
         self.send_cards(count=1,to_public_area=True)
 
-    def liquidate(self,rank_players):
-        """ 赢家瓜分底池 """
-        self.table.pot_size
-        pass
-
-        for player in rank_players:
-            total_bet = player.game_init_stack - player.stack
-
-
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
         self.public_pot_cards
