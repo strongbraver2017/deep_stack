@@ -16,29 +16,28 @@ class Game:
     '''
     from patterns import GameCards
     from compare import CompareModel
+    from role import Pot
 
     table = None                    #table->seat->player
     status = None                   #游戏进度
     cards_machine = GameCards()     #发牌机
     full_cards = []                 #完整的两副牌
     used_cards_buffer = []          #保存已发出的牌，缓冲区
-    pot_players = []                #底池中的玩家，缓冲区
     public_pot_cards = []           #公共牌缓冲区
-    game_queue = None               #游戏逻辑的队列
+    game_queue = []                 #游戏逻辑的队列
     small_blind_seat_index = None   #游戏队列头（小盲）的seat坐标
-    dealer = CompareModel()
+    dealer = CompareModel()         #荷官
 
     def __init__(self,casino,big_blind,small_blind_seat_index):
         self.table = casino.get_free_table()
         self.table.big_blind = big_blind
         self.full_cards = self.cards_machine.to_arr()
-        self.game_queue = []
 
     def shuffle_cards(self):
         self.used_cards_buffer = []
         self.public_pot_cards = []
         self.game_queue = []
-        self.table.pot_size = 0
+        self.table.pots = [Pot(),]
 
     def card_is_in_buffer(self,card):
         for used_card in self.used_cards_buffer:
@@ -95,10 +94,38 @@ class Game:
 
     def bet(self,player,quantity):
         player.stack -= quantity
-        self.table.pot_size += quantity
+        call_val = 0
+        if self.table.sb_allin_just_now and\
+                self.table.previous_allin_value < quantity:
+            """ 新建底池,并添加该玩家入池 """
+            from role import Pot
+            new_pot = Pot()
+            new_pot.players.append(player)
+            self.table.pots.append(new_pot)
+            player.join_pots.append(new_pot)
+            """ 计算玩家两个底池的下注量 """
+            call_val = self.table.previous_allin_value
+            raise_delta = quantity - call_val
+            """ 对最新的两个底池下注 """
+            self.table.pots[-2].size += call_val
+            self.table.pots[-1].size += raise_delta
+            return 'raise'
+        if self.bet_is_allin(player,quantity):
+            player.status = 'allin'
+            self.table.sb_allin_just_now = True
+            self.table.previous_allin_value = quantity
+        self.table.pots[-1].size += quantity
+        old_pot = self.table.pots[-1]
+        if player not in old_pot.players:
+            old_pot.players.append(player)
+            player.join_pots.append(old_pot)
+        return 'bet or call'
+
+    def bet_is_allin(self,player,quantity):
+        return quantity >= player.stack
 
     def fold(self,player):
-        self.pot_players.remove(player)
+        self.game_queue.remove(player)
 
     def call(self,player,last_quantity,raise_to):
         self.bet(player,raise_to-last_quantity)
@@ -125,28 +152,37 @@ class Game:
             seat = self.table.get_specific_seat(seat_index)
             if seat.player == None:
                 continue
+            seat.player.game_init_stack = seat.player.stack
             self.game_queue.append(seat)
 
     def open(self):
+        self.table.clear_just_now_buffer()
         self.status = 'open'
         self.send_cards(count=2,to_players=True)
 
     def flop(self):
+        self.table.clear_just_now_buffer()
         self.status = 'flop'
         self.send_cards(count=3, to_public_area=True)
 
     def turn(self):
+        self.table.clear_just_now_buffer()
         self.status = 'turn'
         self.send_cards(count=1, to_public_area=True)
 
     def river(self):
+        self.table.clear_just_now_buffer()
         self.status = 'river'
         self.send_cards(count=1,to_public_area=True)
 
-    def liquidate(self,winners):
-        """ 瓜分底池 """
+    def liquidate(self,rank_players):
+        """ 赢家瓜分底池 """
         self.table.pot_size
         pass
+
+        for player in rank_players:
+            total_bet = player.game_init_stack - player.stack
+
 
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
@@ -154,19 +190,23 @@ class Game:
         pass
 
     def end(self):
-        """ 以下可得到所有的赢家列表，后交于荷官清算 """
-        winners = [self.game_queue[0],]
+        """   需要对牌力做排序 建立牌力与玩家间的哈希表   """
+        rank_players = [self.game_queue[0],]
         for seat in self.game_queue[1:]:
-            self.dealer.get(
-                five_cards_A=seat.player.hands,
-                five_cards_B=winners[0].hands
-            )
-            if self.dealer.A_stronger_than_B in ['draw',True]:
-                winners.append(seat.player)
-            if self.dealer.A_stronger_than_B == True:
-                winners.remove(winners[0])
-                vvvvvv
-        self.liquidate(winners)
+            for i in range(len(self.game_queue)):
+                self.dealer.get(
+                    five_cards_A=seat.player.hands,
+                    five_cards_B=rank_players[i].hands
+                )
+                if self.dealer.A_stronger_than_B in ['draw',True]:
+                    rank_players.insert(i,seat)
+                    break
+                else:
+                    if i==len(self.game_queue)-1:
+                        rank_players.append(seat)
+
+        self.liquidate(rank_players)
+        """ 以上可得到所有的赢家列表，后交于荷官清算 """
 
         self.table.cancel()
         self.status = 'free'

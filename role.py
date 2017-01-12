@@ -55,9 +55,11 @@ class Table:
     id = 0
     big_blind = 100
     seats = []
-    pot_size = 0
+    pots = []
     status = 'free'
     seat_size = 12
+    sb_allin_just_now = False
+    previous_allin_value = 0
 
     def __init__(self,big_blind=100,id=0):
         self.big_blind = big_blind
@@ -76,12 +78,16 @@ class Table:
         return 20 * self.big_blind
 
     def occupy(self):
-        self.pot_size = 0
+        self.pots.append(Pot())
         self.status = 'busy'
 
     def cancel(self):
         self.status = 'free'
-        self.pot_size = 0
+        self.pots = []
+
+    def clear_just_now_buffer(self):
+        self.sb_allin_just_now = False
+        self.previous_allin_value = 0
 
     def get_specific_seat(self,seat_index):
         for seat in self.seats:
@@ -128,11 +134,13 @@ class Player:
     id = random.choice(range(1000))
     name = None
     stack = 0
+    game_init_stack = 0
     level = None
     place = 'BTN'
     status = 'free'
     account_chips = None
     hands = []
+    join_pots = []
 
     def __init__(self,id=0,name=None,level=100):
         if name==None:
@@ -143,12 +151,30 @@ class Player:
         self.level = level
 
 
-class Operation:
-    '''
-        操作
-    '''
-    name = "Bet"
-    add_size = 0
+class Pot:
+    """  底池   """
+    players = []
+    size = 0
+    total_size = 0
+    unit_size = 0
+
+    def liquidate(self):
+        winners = [self.players[0], ]
+        for seat in self.players[1:]:
+            self.dealer.get(
+                five_cards_A=seat.player.hands,
+                five_cards_B=winners[0].hands
+            )
+            if self.dealer.A_stronger_than_B == 'draw':
+                winners.append(seat.player)
+            if self.dealer.A_stronger_than_B == True:
+                winners = [seat.player,]
+
+        for winner in winners:
+            if winner not in self.players:
+                raise AssertionError('Not pot player: {}'.format(winner))
+        for winner in winners:
+            winner.stack += self.size / len(winners)
 
 
 
