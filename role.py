@@ -185,6 +185,63 @@ class Pot:
             winner.stack += self.size / len(winners)
 
 
+class RingNode:
+    """ 环形列表单位节点 """
+    index = 0
+    object = None
+    parent_ring = None
+
+    def __init__(self, index, parent_ring=None,obj=None):
+        self.index = index
+        self.object = obj
+        self.parent_ring = parent_ring
+
+    @property
+    def next(self):
+        if self.index == self.parent_ring.length-1:
+            return self.parent_ring.nodes[0]
+        else:
+            return self.parent_ring.nodes[self.index+1]
+
+    @property
+    def prev(self):
+        if self.index == 0:
+            return self.parent_ring.nodes[self.parent_ring.length-1]
+        else:
+            return self.parent_ring.nodes[self.index-1]
+
+
+class RingList:
+    """ 环形列表 """
+
+    nodes = []
+
+    def __init__(self,size):
+        for i in range(size):
+            self.add_one_node()
+
+    def append(self,node_object=None):
+        self.nodes.append(
+            RingNode(index=self.length, parent_ring=self,obj=node_object)
+        )
+
+    @property
+    def length(self):
+        return len(self.nodes)
+
+    def assign(self,index,obj):
+        self.nodes[index].object = obj
+
+    def remove(self,obj):
+        self.nodes.remove(obj)
+
+    def get_node_by(self,index=None,obj=None):
+        if index:
+            return self.nodes[index]
+        if obj:
+            for node in self.nodes:
+                if node.object == obj:
+                    return node
 
 
 

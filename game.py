@@ -9,8 +9,8 @@
 @description:
         保存德州扑克游戏逻辑
 """
-from role import Pot
 
+from role import Pot, RingList
 
 class Game:
     '''
@@ -25,7 +25,7 @@ class Game:
     full_cards = []                 #完整的两副牌
     used_cards_buffer = []          #保存已发出的牌，缓冲区
     public_pot_cards = []           #公共牌缓冲区
-    game_queue = []                 #游戏逻辑的队列
+    game_queue = RingList(size=0)   #游戏逻辑的队列
     small_blind_seat_index = None   #游戏队列头（小盲）的seat坐标
     dealer = CompareModel()         #荷官
 
@@ -37,7 +37,7 @@ class Game:
     def shuffle_cards(self):
         self.used_cards_buffer = []
         self.public_pot_cards = []
-        self.game_queue = []
+        self.game_queue = RingList(size=0)
         self.table.pots = [Pot(),]
 
     def card_is_in_buffer(self,card):
@@ -131,8 +131,9 @@ class Game:
         self.bet(player,quantity)
 
     def raise_(self,player,raise_to):
-        self.bet(player,raise_to)
+        self.call(player, self.last_quantity)
         delta = raise_to-self.last_quantity
+        self.bet(player,delta)
         call = player.cmd_if_call(delta)
         if call:
             self.call(player,delta)
@@ -169,10 +170,21 @@ class Game:
             'f': self.fold,
             'r': self.raise_,
         }
-        for player in self.game_queue:
+        first_node = self.game_queue.get_node_by(
+            obj=self.table.get_specific_seat(
+                self.small_blind_seat_index).player)
+        node = first_node
+        while(1):
+            player = node.object
             operation_index, quantity = player.operate()
             operate = operation_map[operation_index]
             operate(*[player,quantity])
+            node = node.next
+            if node==first_node:
+                print('AgreeMent Achieved!')
+                break
+            else:
+                print('Next Node!')
 
     def basic_process(self,status_name,count,
             cards_to_players=False,cards_to_area=False):
