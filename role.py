@@ -38,12 +38,19 @@ class Seat:
         self.player = None
 
     def __repr__(self):
-        return (
-            'Seat [{}]( {} ): ${} \n'
-        ).format(
-            self.table_index, self.player.name,
-            self.player.stack
-        )
+        if self.player:
+            return (
+                'Seat [{}]( {} ): ${} \n'
+            ).format(
+                self.table_index, self.player.name,
+                self.player.stack
+            )
+        else:
+            return (
+                'Seat [{}]: None \n'
+            ).format(
+                self.table_index
+            )
 
 
 class Table:
@@ -93,6 +100,12 @@ class Table:
                 return seat
         return None
 
+    def get_free_seat(self):
+        for seat in self.seats:
+            if seat.status == 'free':
+                return seat
+        return None
+
     def __repr__(self):
         seat_str = ''
         for seat in self.seats:
@@ -130,15 +143,15 @@ class Player:
     import random
 
     id = random.choice(range(1000))
-    name = None
+    name = 'argo'
     stack = 0
     game_init_stack = 0
     level = None
-    place = 'BTN'
     status = 'free'
-    account_chips = None
+    account_chips = 1000000
     hands = []
     join_pots = []
+    last_bet_quantity = 0
 
     def __init__(self,id=0,name=None,level=100):
         if name==None:
@@ -234,7 +247,9 @@ class RingList:
         self.nodes[index].object = obj
 
     def remove(self,obj):
-        self.nodes.remove(obj)
+        self.nodes.remove(
+            self.get_node_by(obj=obj)
+        )
 
     def get_node_by(self,index=None,obj=None):
         if index:
@@ -243,6 +258,9 @@ class RingList:
             for node in self.nodes:
                 if node.object == obj:
                     return node
+
+    def to_list(self):
+        return [ node.object for node in self.nodes ]
 
 
 

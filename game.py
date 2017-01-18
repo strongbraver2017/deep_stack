@@ -15,12 +15,12 @@ from patterns import GameCards
 from compare import CompareModel
 from itertools import combinations
 
+import time
 
 class Game:
     '''
         德州牌局
     '''
-
 
     table = None                    #table->seat->player
     status = None                   #游戏进度
@@ -28,19 +28,21 @@ class Game:
     full_cards = []                 #完整的两副牌
     used_cards_buffer = []          #保存已发出的牌，缓冲区
     public_pot_cards = []           #公共牌缓冲区
-    game_queue = RingList(size=0)   #游戏逻辑的队列
+    players_queue = RingList(size=0)#游戏逻辑的玩家队列
     small_blind_seat_index = None   #游戏队列头（小盲）的seat坐标
     dealer = CompareModel()         #荷官
+    stage_max_bet = 0               #某个阶段的最大下注
 
     def __init__(self,casino,big_blind,small_blind_seat_index):
         self.table = casino.get_free_table()
         self.table.big_blind = big_blind
         self.full_cards = self.cards_machine.to_arr()
+        self.small_blind_seat_index = small_blind_seat_index
 
     def shuffle_cards(self):
         self.used_cards_buffer = []
         self.public_pot_cards = []
-        self.game_queue = RingList(size=0)
+        self.players_queue = RingList(size=0)
         self.table.pots = [Pot(),]
 
     def card_is_in_buffer(self,card):
@@ -62,10 +64,28 @@ class Game:
                     break
         return cards
 
-    def add_player(self,player,chose_seat_index,chose_buyin):
-        seat = self.table.get_specific_seat(chose_seat_index)
+    def add_player(self,player,chose_buyin,chose_seat_index=None):
+        if chose_seat_index:
+            seat = self.table.get_specific_seat(chose_seat_index)
+        else:
+            #未指定index则分配空闲座位
+            seat = self.table.get_free_seat()
+            if seat==None:
+                raise EnvironmentError('No seat could be allocated.')
         seat.sit(player)
         self.add_ones_chips(player, chose_buyin)
+
+    def add_AI(self,size):
+        from role import Player
+        for i in range(size):
+            try:
+                self.add_player(
+                    player=Player(),
+                    chose_buyin=100*self.big_blind
+                )
+            except EnvironmentError:
+                break
+        return
 
     def rm_seat(self,seat_index):
         seat = self.table.get_specific_seat(seat_index)
@@ -98,7 +118,7 @@ class Game:
 
     def bet(self,player,quantity):
         player.stack -= quantity
-        self.last_quantity = quantity
+        player.last_bet_quantity += quantity
         if self.table.sb_allin_just_now and\
                 self.table.previous_allin_value < quantity:
             """ 新建底池,并添加该玩家入池 """
@@ -128,18 +148,15 @@ class Game:
         return quantity >= player.stack
 
     def fold(self,player):
-        self.game_queue.remove(player)
+        self.players_queue.remove(player)
 
     def call(self,player,quantity):
         self.bet(player,quantity)
 
     def raise_(self,player,raise_to):
-        self.call(player, self.last_quantity)
-        delta = raise_to-self.last_quantity
+        self.call(player, self.stage_max_bet)
+        delta = raise_to-self.stage_max_bet
         self.bet(player,delta)
-        call = player.cmd_if_call(delta)
-        if call:
-            self.call(player,delta)
 
     def preflop(self):
         self.table.occupy()
@@ -152,33 +169,39 @@ class Game:
         seat_indexs.extend(list(range(
             self.small_blind_seat_index)))
         small_blind = self.table.get_specific_seat(
-            self.small_blind_seat_index).player
+            seat_index=self.small_blind_seat_index).player
         big_blind = self.table.get_specific_seat(
-            seat_indexs[1]).player
-        self.bet(player=small_blind,quantity=0.5*big_blind)
-        self.bet(player=big_blind, quantity=1*big_blind)
-
+            seat_index=seat_indexs[1]).player
+        self.bet(player=small_blind,quantity=0.5*self.big_blind)
+        self.bet(player=big_blind, quantity=1*self.big_blind)
         """  将玩家全部置入游戏队列   """
         for seat_index in seat_indexs:
             seat = self.table.get_specific_seat(seat_index)
             if seat.player == None:
                 continue
             seat.player.game_init_stack = seat.player.stack
-            self.game_queue.append(seat)
+            self.players_queue.append(seat.player)
 
-    def bet_process(self):
+    @property
+    def big_blind(self):
+        return self.table.big_blind
+
+    def operate(self):
         operation_map = {
             'b': self.bet,
             'c': self.call,
             'f': self.fold,
             'r': self.raise_,
         }
-        first_node = self.game_queue.get_node_by(
-            obj=self.table.get_specific_seat(
-                self.small_blind_seat_index).player)
+        first_node = self.players_queue.get_node_by(index=0)#小盲
         node = first_node
-        while(1):
+        while True:
+            """ 轮询列表里的所有玩家，表态 """
             player = node.object
+            """ 检测是否是待call状态 """
+            if self.stage_max_bet>0:
+                delta = self.stage_max_bet - player.last_bet_quantity
+                print('you have to agree someones bet: {}'.format(delta))
             operation_index, quantity = player.operate()
             operate = operation_map[operation_index]
             operate(*[player,quantity])
@@ -201,7 +224,13 @@ class Game:
             to_players = cards_to_players,
             to_public_area = cards_to_area
         )
-        self.bet_process()
+        self.operate()
+        self.stage_max_bet = 0
+        for player in self.players_queue.to_list():
+            player.last_bet_quantity = 0
+        if self.players_queue.length<=1:
+            #其余玩家都fo牌，直接清算结束游戏
+            self.end()
 
     def open(self):
         self.basic_process(
@@ -233,10 +262,13 @@ class Game:
 
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
-        max_cards = self.public_pot_cards
-        for cards in combinations(
-                self.public_pot_cards.extend(player.hands),5):
-            #七张中选五张组合（python内建的迭代工具）
+        all_cards = combinations(
+            iterable=self.public_pot_cards.extend(player.hands),
+            r = 5
+        )
+        max_cards = all_cards[0]
+        for cards in all_cards:
+            #5-7张中选五张组合（python内建的迭代工具）
             self.dealer.get(five_cards_A=cards,five_cards_B=max_cards)
             if self.dealer.A_stronger_than_B:
                 max_cards = cards
@@ -250,5 +282,9 @@ class Game:
         self.status = 'free'
 
     def begin(self):
-        self.before_open()
-        self.end()
+        while self.players_queue.length<2:
+            print('waiting for players join...')
+            print(self.table)
+            time.sleep(1)
+        self.preflop()
+
