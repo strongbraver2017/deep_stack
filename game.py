@@ -179,6 +179,9 @@ class Game:
             operation_index, quantity = player.operate()
             operate = operation_map[operation_index]
             operate(*[player,quantity])
+            if operation_index == 'r':
+                #如果有人raise表示不服，则重新开启进程环，直到他上家表态完成
+                first_node = node
             node = node.next
             if node==first_node:
                 print('AgreeMent Achieved!')
