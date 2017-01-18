@@ -56,7 +56,7 @@ class Game:
         cards = []
         for i in range(count):
             card = self.cards_machine.get_random_x(
-                x=1,ext_cards=self.full_cards)
+                x=1,ext_cards=self.full_cards)[0]
             while(1):
                 if not self.card_is_in_buffer(card):
                     cards.append(card)
@@ -158,30 +158,6 @@ class Game:
         delta = raise_to-self.stage_max_bet
         self.bet(player,delta)
 
-    def preflop(self):
-        self.table.occupy()
-        self.status = 'preflop'
-        self.shuffle_cards()
-
-        """  按照指定的小盲位顺时针取出玩家，并扣除大小盲入池   """
-        seat_indexs = list(range(
-            self.small_blind_seat_index,self.table.seat_size))
-        seat_indexs.extend(list(range(
-            self.small_blind_seat_index)))
-        small_blind = self.table.get_specific_seat(
-            seat_index=self.small_blind_seat_index).player
-        big_blind = self.table.get_specific_seat(
-            seat_index=seat_indexs[1]).player
-        self.bet(player=small_blind,quantity=0.5*self.big_blind)
-        self.bet(player=big_blind, quantity=1*self.big_blind)
-        """  将玩家全部置入游戏队列   """
-        for seat_index in seat_indexs:
-            seat = self.table.get_specific_seat(seat_index)
-            if seat.player == None:
-                continue
-            seat.player.game_init_stack = seat.player.stack
-            self.players_queue.append(seat.player)
-
     @property
     def big_blind(self):
         return self.table.big_blind
@@ -232,9 +208,9 @@ class Game:
             #其余玩家都fo牌，直接清算结束游戏
             self.end()
 
-    def open(self):
+    def preflop(self):
         self.basic_process(
-            status_name = 'open',
+            status_name = 'preflop',
             count = 2,
             cards_to_players = True
         )
@@ -282,9 +258,35 @@ class Game:
         self.status = 'free'
 
     def begin(self):
+        self.table.occupy()
+        self.status = 'preflop'
+        self.shuffle_cards()
+
+        """  按照指定的小盲位顺时针取出玩家，并扣除大小盲入池   """
+        seat_indexs = list(range(
+            self.small_blind_seat_index,self.table.seat_size))
+        seat_indexs.extend(list(range(
+            self.small_blind_seat_index)))
+        small_blind = self.table.get_specific_seat(
+            seat_index=self.small_blind_seat_index).player
+        big_blind = self.table.get_specific_seat(
+            seat_index=seat_indexs[1]).player
+        self.bet(player=small_blind,quantity=0.5*self.big_blind)
+        self.bet(player=big_blind, quantity=1*self.big_blind)
+        """  将玩家全部置入游戏队列   """
+        for seat_index in seat_indexs:
+            seat = self.table.get_specific_seat(seat_index)
+            if seat.player == None:
+                continue
+            seat.player.game_init_stack = seat.player.stack
+            self.players_queue.append(seat.player)
+
+        print(self.table)
+
         while self.players_queue.length<2:
             print('waiting for players join...')
             print(self.table)
             time.sleep(1)
+
         self.preflop()
 

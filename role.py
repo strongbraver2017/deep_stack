@@ -42,14 +42,14 @@ class Seat:
             return (
                 'Seat [{}]( {} ): ${} \n'
             ).format(
-                self.table_index, self.player.name,
+                self.index, self.player.name,
                 self.player.stack
             )
         else:
             return (
                 'Seat [{}]: None \n'
             ).format(
-                self.table_index
+                self.index
             )
 
 
@@ -140,9 +140,7 @@ class Player:
     '''
         玩家
     '''
-    import random
-
-    id = random.choice(range(1000))
+    id = 0
     name = 'argo'
     stack = 0
     game_init_stack = 0
@@ -153,7 +151,10 @@ class Player:
     join_pots = []
     last_bet_quantity = 0
 
-    def __init__(self,id=0,name=None,level=100):
+    def __init__(self,id=None,name=None,level=100):
+        import random
+        if id==None:
+            self.id = random.choice(range(1000))
         if name==None:
             self.name = 'Robot-{}'.format(self.id)
         else:
