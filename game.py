@@ -11,13 +11,16 @@
 """
 
 from role import Pot, RingList
+from patterns import GameCards
+from compare import CompareModel
+from itertools import combinations
+
 
 class Game:
     '''
         德州牌局
     '''
-    from patterns import GameCards
-    from compare import CompareModel
+
 
     table = None                    #table->seat->player
     status = None                   #游戏进度
@@ -138,9 +141,9 @@ class Game:
         if call:
             self.call(player,delta)
 
-    def before_open(self):
+    def preflop(self):
         self.table.occupy()
-        self.status = 'before open'
+        self.status = 'preflop'
         self.shuffle_cards()
 
         """  按照指定的小盲位顺时针取出玩家，并扣除大小盲入池   """
@@ -230,8 +233,14 @@ class Game:
 
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
-        self.public_pot_cards
-        pass
+        max_cards = self.public_pot_cards
+        for cards in combinations(
+                self.public_pot_cards.extend(player.hands),5):
+            #七张中选五张组合（python内建的迭代工具）
+            self.dealer.get(five_cards_A=cards,five_cards_B=max_cards)
+            if self.dealer.A_stronger_than_B:
+                max_cards = cards
+        return max_cards
 
     def end(self):
         """ 清算所有底池 """

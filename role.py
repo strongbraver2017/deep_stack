@@ -218,11 +218,12 @@ class RingList:
 
     def __init__(self,size):
         for i in range(size):
-            self.add_one_node()
+            self.append(node_object=None)
 
     def append(self,node_object=None):
         self.nodes.append(
-            RingNode(index=self.length, parent_ring=self,obj=node_object)
+            RingNode(index=self.length,
+                parent_ring=self,obj=node_object)
         )
 
     @property
