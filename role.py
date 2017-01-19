@@ -52,23 +52,21 @@ class Seat:
                 self.index
             )
 
-
 class Table:
     '''
         牌桌
     '''
-    id = 0
-    big_blind = 100
-    seats = []
-    pots = []
-    status = 'free'
-    seat_size = 12
-    sb_allin_just_now = False
-    previous_allin_value = 0
-
-    def __init__(self,big_blind=100,id=0):
+    def __init__(self,big_blind=100,id=0,seat_size=9):
         self.big_blind = big_blind
+        self.seat_size = seat_size
         self.id = id
+
+        self.seats = []
+        self.pots = []
+        self.status = 'free'
+        self.sb_allin_just_now = False
+        self.previous_allin_value = 0
+
         for i in range(self.seat_size):
             seat = Seat(index=i)
             seat.table_index = self.id
@@ -111,9 +109,7 @@ class Table:
         for seat in self.seats:
             seat_str += seat.__repr__()
         return (
-            '______________ Table {} _________________\n'
-            '{}'
-            '_________________________________________'
+            '______________ Table {} _________________\n{}'
         ).format(self.id, seat_str)
 
 
@@ -121,14 +117,15 @@ class Casino:
     '''
         赌场/平台
     '''
-    name = 'Macau'
-    tables = []
-    table_cot = 100
 
-    def __init__(self,table_cot=100):
+    def __init__(self,table_cot=100,table_seat_size=9,name=None):
+        self.name = name
+        self.tables = []
         self.table_cot = table_cot
         for i in range(table_cot):
-            self.tables.append(Table(id=i))
+            self.tables.append(
+                Table(id=i,seat_size=table_seat_size)
+            )
 
     def get_free_table(self):
         for table in self.tables:
@@ -136,49 +133,56 @@ class Casino:
                 return table
 
 
+import random
+
 class Player:
     '''
         玩家
     '''
-    id = 0
-    name = 'argo'
-    stack = 0
-    game_init_stack = 0
-    level = None
-    status = 'free'
-    account_chips = 1000000
-    hands = []
-    join_pots = []
-    last_bet_quantity = 0
 
     def __init__(self,id=None,name=None,level=100):
-        import random
+        self.id = id
+        self.name = name
+        self.level = level
+        self.stack = 0
+        self.game_init_stack = 0
+        self.status = 'free'
+        self.account_chips = 1000000
+        self.hands = []
+        self.join_pots = []
+        self.last_bet_quantity = 0
         if id==None:
             self.id = random.choice(range(1000))
         if name==None:
             self.name = 'Robot-{}'.format(self.id)
-        else:
-            self.name = name
-        self.id = id
-        self.level = level
 
     def cmd_operate(self):
-        operation_index = input('operation_index: ?')
-        quantity = input('quantity: ?')
+        operation_index = input('operation_index: ')
+        if operation_index in ['ca','ch','f']:
+            quantity = None
+        else:
+            quantity = int(input('quantity: '))
         return (operation_index,quantity)
 
     def cmd_if_call(self,quantity):
-        call = input('if call {}?'.format(quantity))
+        call = input('if call {}?(y or n)\n'.format(quantity))
         return call
 
-
+    def __repr__(self):
+        return (
+            '\n________  Player {}:  {}   ___________\n'
+            'stack: {}\n'
+            'join_pots: {}\n'
+            'last_bet_quantity: {}\n'
+        ).format(self.name, self.hands, self.stack,
+                 self.join_pots, self.last_bet_quantity)
 
 class Pot:
     """  底池   """
-    players = []
-    size = 0
-    total_size = 0
-    unit_size = 0
+    def __init__(self):
+        self.players = []
+        self.size = 0
+        self.index = random.choice(['a','b','c','d','e'])
 
     def liquidate(self):
         winners = [self.players[0], ]
@@ -198,10 +202,12 @@ class Pot:
         for winner in winners:
             winner.stack += self.size / len(winners)
 
+    def __repr__(self):
+        return '<Pot {}: ${} >'.format(self.index,self.size)
+
 
 class RingNode:
     """ 环形列表单位节点 """
-    index = 0
     object = None
     parent_ring = None
 
@@ -253,12 +259,13 @@ class RingList:
         )
 
     def get_node_by(self,index=None,obj=None):
-        if index:
+        if index is not None:
             return self.nodes[index]
-        if obj:
+        if obj is not None:
             for node in self.nodes:
                 if node.object == obj:
                     return node
+        return None
 
     def to_list(self):
         return [ node.object for node in self.nodes ]

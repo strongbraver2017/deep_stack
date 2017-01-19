@@ -55,19 +55,26 @@ class GameCards:
                 cards.append(card)
         return cards
 
-    def get_random_x(self,x,ext_cards=None):
+    def get_random_x(self,x,ext_cards=None,except_cards=None):
         import random
         if ext_cards == None:
             cards = self.to_arr()
         else:
             cards = ext_cards
+
+        if except_cards is None:
+            except_cards = []
+
         random_x_cards = []
         for i in range(x):
             while (1):
                 card = random.choice(cards)
-                if card not in random_x_cards:
+                if card not in except_cards:
                     random_x_cards.append(card)
+                    except_cards.append(card)
                     break
+                else:
+                    print('Card Machine: {} in ')
         return random_x_cards
 
 
