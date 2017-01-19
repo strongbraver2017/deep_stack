@@ -25,7 +25,6 @@ class JudgeModel:
         ]:
             test_model = pattern(five_cards)
             if test_model.judge_result:
-                print('{}:\t{}'.format(
-                    test_model,five_cards))
+                #print('{}:\t{}'.format(test_model,five_cards))
                 return test_model
         return None

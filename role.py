@@ -12,16 +12,13 @@
 
 class Seat:
     """ 座位 """
-    index = None
-    player = None
-    status = 'free'
-    table_index = 0
-    queue_postion_index = 0
 
     def __init__(self,index,player=None):
-        if player:
-            self.player = player
+        self.player = player
         self.index = index
+        self.status = 'free'
+        self.table_index = 0
+        self.queue_postion_index = 0
 
     def sit(self,player):
         if self.status == 'busy':
@@ -56,7 +53,7 @@ class Table:
     '''
         牌桌
     '''
-    def __init__(self,big_blind=100,id=0,seat_size=9):
+    def __init__(self,big_blind=2,id=0,seat_size=9):
         self.big_blind = big_blind
         self.seat_size = seat_size
         self.id = id
@@ -157,11 +154,16 @@ class Player:
             self.name = 'Robot-{}'.format(self.id)
 
     def cmd_operate(self):
-        operation_index = input('operation_index: ')
-        if operation_index in ['ca','ch','f']:
-            quantity = None
-        else:
-            quantity = int(input('quantity: '))
+        while True:
+            operation_index = input('operation_index: ')
+            if operation_index in ['ca','ch','f']:
+                quantity = None
+                break
+            elif operation_index in ['b','r']:
+                quantity = int(input('quantity: '))
+                break
+            else:
+                print('No such index.Again:')
         return (operation_index,quantity)
 
     def cmd_if_call(self,quantity):
@@ -171,11 +173,12 @@ class Player:
     def __repr__(self):
         return (
             '\n________  Player {}:  {}   ___________\n'
-            'stack: {}\n'
+            'stack: ${}\n'
             'join_pots: {}\n'
-            'last_bet_quantity: {}\n'
+            'last_bet_quantity: ${}\n'
         ).format(self.name, self.hands, self.stack,
                  self.join_pots, self.last_bet_quantity)
+
 
 class Pot:
     """  底池   """
@@ -208,8 +211,6 @@ class Pot:
 
 class RingNode:
     """ 环形列表单位节点 """
-    object = None
-    parent_ring = None
 
     def __init__(self, index, parent_ring=None,obj=None):
         self.index = index

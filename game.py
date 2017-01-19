@@ -14,6 +14,7 @@ from role import Pot, RingList, Player
 from patterns import GameCards
 from compare import CompareModel
 from itertools import combinations
+from judge import JudgeModel
 
 import time
 
@@ -71,7 +72,7 @@ class Game:
         if chose_seat_index:
             seat = self.table.get_specific_seat(chose_seat_index)
         else:
-            #未指定index则分配空闲座位
+            #未指定index则随机分配空闲座位
             seat = self.table.get_free_seat()
             if seat==None:
                 raise EnvironmentError('No seat could be allocated.')
@@ -79,11 +80,14 @@ class Game:
         self.add_ones_chips(player, chose_buyin)
 
     def add_AI(self,size):
+        import random
         for i in range(size):
             try:
                 self.add_player(
                     player=Player(),
-                    chose_buyin=100*self.big_blind
+                    chose_buyin= random.choice(
+                        range(self.table.min_buyin,self.table.max_buyin)
+                    )
                 )
             except EnvironmentError:
                 break
@@ -114,9 +118,9 @@ class Game:
             for seat in self.table.seats:
                 if seat.player == None:
                     continue
-                seat.player.hands = self.get_x_free_cards(count)
+                seat.player.hands.extend(self.get_x_free_cards(count))
         if to_public_area:
-            self.public_pot_cards = self.get_x_free_cards(count)
+            self.public_pot_cards.extend(self.get_x_free_cards(count))
 
     def bet(self,player,quantity):
         player.stack -= quantity
@@ -183,10 +187,16 @@ class Game:
             """ 轮询列表里的所有玩家，表态 """
             player = node.object
             print(player)
+            try:
+                his_max_cards = self.get_ones_max_pattern(player)
+                cards_model = JudgeModel().get_type(his_max_cards)
+                print(cards_model)
+            except LookupError:
+                pass
             """ 检测是否是待call状态 """
             if self.stage_max_bet>0:
                 delta = self.stage_max_bet - player.last_bet_quantity
-                print('you have to agree someones bet: {}'.format(delta))
+                print('you have to agree someones bet: {} or fold.'.format(delta))
             operation_index, quantity = player.cmd_operate()
             operation_map[operation_index](player,quantity)
             if operation_index == 'r':
@@ -196,12 +206,10 @@ class Game:
             if node==first_node:
                 print('AgreeMent Achieved!')
                 break
-            else:
-                print('\nNext Player:')
 
     def basic_process(self,stage_name,status_name,count,
             cards_to_players=False,cards_to_area=False):
-        print('___________  {}  _____________'.format(stage_name))
+        print('\n___________  {}  _____________'.format(stage_name))
         self.table.clear_just_now_buffer()
         self.status = status_name
         self.send_cards(
@@ -240,7 +248,7 @@ class Game:
             stage_name='Turn',
             status_name = 'turn',
             count = 1,
-            cards_to_players = True
+            cards_to_area = True
         )
 
     def river(self):
@@ -248,19 +256,29 @@ class Game:
             stage_name='River',
             status_name = 'river',
             count = 1,
-            cards_to_players = True
+            cards_to_area = True
         )
 
     def get_ones_max_pattern(self,player):
         """ 得到某玩家5-7张牌中的最大牌型 """
-        all_cards = combinations(
-            iterable=self.public_pot_cards.extend(player.hands),
+        temp_cards = []
+        temp_cards.extend(self.public_pot_cards)
+        temp_cards.extend(player.hands)
+        print('temp_cards: ',temp_cards)
+
+        if len(temp_cards)<5:
+            raise LookupError('Cards < 5')
+        all_cards = list(combinations(
+            iterable = temp_cards,
             r = 5
-        )
+        ))
         max_cards = all_cards[0]
         for cards in all_cards:
             #5-7张中选五张组合（python内建的迭代工具）
-            self.dealer.get(five_cards_A=cards,five_cards_B=max_cards)
+            self.dealer.get(
+                five_cards_A=cards,
+                five_cards_B=max_cards
+            )
             if self.dealer.A_stronger_than_B:
                 max_cards = cards
         return max_cards
@@ -279,7 +297,8 @@ class Game:
 
         """  按照指定的小盲位顺时针取出玩家，并扣除大小盲入池   """
         seat_indexs = list(range(
-            self.small_blind_seat_index,self.table.seat_size
+            self.small_blind_seat_index,
+            self.table.seat_size
         ))
         seat_indexs.extend(list(range(
             self.small_blind_seat_index
@@ -310,5 +329,3 @@ class Game:
         for stage in [self.preflop, self.flop, self.turn, self.river]:
             if stage()=='game over':
                 return
-
-

@@ -23,7 +23,9 @@ while(1):
     cardsB = cards_machine.get_random_x(
         x=5, ext_cards=all_cards)
 
-    cp = CompareModel(cardsA,cardsB)
+    cp = CompareModel()
+
+    cp.get(cardsA,cardsB)
 
     st = cp.A_stronger_than_B
 

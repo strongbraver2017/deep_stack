@@ -74,7 +74,7 @@ class GameCards:
                     except_cards.append(card)
                     break
                 else:
-                    print('Card Machine: {} in ')
+                    print('Card Machine: {} used'.format(card))
         return random_x_cards
 
 
@@ -156,7 +156,6 @@ class GroupPattern:
             count=1,list=True,need_check=False)
         vals.sort()
         vals.reverse()
-        print(vals)
         return vals
 
 '''
@@ -194,7 +193,9 @@ class FullHouse(GroupPattern):
     def __repr__(self):
         val1 = self.trans_val(self.the_three_Value)
         val2 = self.trans_val(self.the_two_Value)
-        return 'Full House, {} and {}'.format(val1,val2)
+        return 'Full House, {} and {}: {}'.format(
+            val1,val2, self.five_cards)
+
 
 class Flush(GroupPattern):
     '''
@@ -214,7 +215,7 @@ class Flush(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.max_val)
-        return 'Flush , {} High'.format(val)
+        return 'Flush , {} High: {}'.format(val,self.five_cards)
 
 
 class FourOfOneKind(GroupPattern):
@@ -244,7 +245,7 @@ class FourOfOneKind(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.the_four_Value)
-        return 'King of {}'.format(val)
+        return 'King of {}: {}'.format(val,self.five_cards)
 
 
 class Straight(GroupPattern):
@@ -268,7 +269,8 @@ class Straight(GroupPattern):
     def __repr__(self):
         val1 = self.trans_val(self.max_val)
         val2 = self.trans_val(self.max_val-4)
-        return 'Straight , {} to {}'.format(val2,val1)
+        return 'Straight , {} to {}: {}'.format(
+            val2,val1,self.five_cards)
 
 
 class StraightFlush(GroupPattern):
@@ -290,7 +292,8 @@ class StraightFlush(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.max_val)
-        return 'Straight Flush, {} to {}'.format(val-4,val)
+        return 'Straight Flush, {} to {}: {}'.format(
+            val-4,val, self.five_cards)
 
 
 class RoyalFlush(GroupPattern):
@@ -311,7 +314,7 @@ class RoyalFlush(GroupPattern):
             self.max_val == 14
 
     def __repr__(self):
-        return 'Royal Flush'
+        return 'Royal Flush: {}'.format(self.five_cards)
 
 
 class Set(GroupPattern):
@@ -337,7 +340,7 @@ class Set(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.the_three_Value)
-        return 'Set of {}'.format(val)
+        return 'Set of {}: {}'.format(val,self.five_cards)
 
 
 class TwoPairs(GroupPattern):
@@ -373,7 +376,8 @@ class TwoPairs(GroupPattern):
     def __repr__(self):
         val1 = self.trans_val(self.the_big_pair_Value)
         val2 = self.trans_val(self.the_small_pair_Value)
-        return 'Pairs of {} and {}'.format(val1,val2)
+        return 'Pairs of {} and {}: {}'.format(
+            val1,val2,self.five_cards)
 
 
 class OnePair(GroupPattern):
@@ -399,7 +403,7 @@ class OnePair(GroupPattern):
 
     def __repr__(self):
         value = self.trans_val(self.the_pair_Value)
-        return 'One Pair of {}'.format(value)
+        return 'One Pair of {}: {}'.format(value,self.five_cards)
 
 
 class HighCard(GroupPattern):
@@ -422,4 +426,4 @@ class HighCard(GroupPattern):
 
     def __repr__(self):
         value = self.trans_val(self.max_val)
-        return '{} High'.format(value)
+        return '{} High: {}'.format(value,self.five_cards)
