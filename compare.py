@@ -19,8 +19,8 @@ class CompareModel:
     B = None
 
     def get(self, five_cards_A, five_cards_B):
-        if len(five_cards_A)!=5 or\
-                len(five_cards_B)!=5:
+        if len(five_cards_A) != 5 or\
+                len(five_cards_B) != 5:
             raise ValueError('Just support five cards compared.')
         engine = JudgeModel()
         self.A = engine.get_type(five_cards_A)
