@@ -13,11 +13,12 @@
 from judge import JudgeModel
 from patterns import GroupMap
 
+
 class CompareModel:
     A = None
     B = None
 
-    def get(self,five_cards_A,five_cards_B):
+    def get(self, five_cards_A, five_cards_B):
         if len(five_cards_A)!=5 or\
                 len(five_cards_B)!=5:
             raise ValueError('Just support five cards compared.')
@@ -33,11 +34,11 @@ class CompareModel:
             else:
                 public_type = self.A.name
 
-                if public_type=='Set':
+                if public_type == 'Set':
                     if self.A.the_three_Value != self.B.the_three_Value:
                         return self.A.the_three_Value > self.B.the_three_Value
 
-                if public_type=='One Pair':
+                if public_type == 'One Pair':
                     if self.A.the_pair_Value != self.B.the_pair_Value:
                         return self.A.the_pair_Value > self.B.the_pair_Value
 
@@ -50,7 +51,7 @@ class CompareModel:
                     'Straight Flush',
                     'Royal Flush'
                 ]:
-                    #对single value非常多的做统一的倒序+循环比较处理
+                    # 对single value非常多的做统一的倒序+循环比较处理
                     A_single_values = self.A.the_single_Values
                     B_single_values = self.B.the_single_Values
                     for i in range(len(A_single_values)):
@@ -58,7 +59,7 @@ class CompareModel:
                             return A_single_values[i] > B_single_values[i]
                     return 'draw'
 
-                if public_type=='Two Pairs':
+                if public_type == 'Two Pairs':
                     if self.A.the_big_pair_Value != self.B.the_big_pair_Value:
                         return self.A.the_big_pair_Value > self.B.the_big_pair_Value
                     if self.A.the_small_pair_Value != self.B.the_small_pair_Value:
@@ -68,7 +69,7 @@ class CompareModel:
                     else:
                         return 'draw'
 
-                if public_type=='Full House':
+                if public_type == 'Full House':
                     if self.A.the_three_Value != self.B.the_three_Value:
                         return self.A.the_three_Value > self.B.the_three_Value
                     if self.A.the_two_Value != self.B.the_two_Value:
@@ -76,7 +77,7 @@ class CompareModel:
                     else:
                         return 'draw'
 
-                if public_type=='Four Of One Kind':
+                if public_type == 'Four Of One Kind':
                     if self.A.the_four_Value != self.B.the_four_Value:
                         return self.A.the_four_Value > self.B.the_four_Value
                     if self.A.the_one_Value != self.B.the_one_Value:

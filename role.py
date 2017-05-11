@@ -9,6 +9,8 @@
 @description:
         德州扑克游戏里的各种角色
 """
+import random
+
 
 class Seat:
     """ 座位 """
@@ -49,10 +51,11 @@ class Seat:
                 self.index
             )
 
+
 class Table:
-    '''
+    """
         牌桌
-    '''
+    """
     def __init__(self,big_blind=2,id=0,seat_size=9):
         self.big_blind = big_blind
         self.seat_size = seat_size
@@ -111,9 +114,9 @@ class Table:
 
 
 class Casino:
-    '''
+    """
         赌场/平台
-    '''
+    """
 
     def __init__(self,table_cot=100,table_seat_size=9,name=None):
         self.name = name
@@ -130,12 +133,10 @@ class Casino:
                 return table
 
 
-import random
-
 class Player:
-    '''
+    """
         玩家
-    '''
+    """
 
     def __init__(self,id=None,name=None,level=100):
         self.id = id
@@ -148,9 +149,9 @@ class Player:
         self.hands = []
         self.join_pots = []
         self.last_bet_quantity = 0
-        if id==None:
+        if id is None:
             self.id = random.choice(range(1000))
-        if name==None:
+        if name is None:
             self.name = 'Robot-{}'.format(self.id)
 
     def cmd_operate(self):
@@ -164,7 +165,7 @@ class Player:
                 break
             else:
                 print('No such index.Again:')
-        return (operation_index,quantity)
+        return operation_index, quantity
 
     def cmd_if_call(self,quantity):
         call = input('if call {}?(y or n)\n'.format(quantity))
@@ -185,7 +186,7 @@ class Pot:
     def __init__(self):
         self.players = []
         self.size = 0
-        self.index = random.choice(['a','b','c','d','e'])
+        self.index = random.choice(['a', 'b', 'c', 'd', 'e'])
 
     def liquidate(self):
         winners = [self.players[0], ]
@@ -196,8 +197,8 @@ class Pot:
             )
             if self.dealer.A_stronger_than_B == 'draw':
                 winners.append(seat.player)
-            if self.dealer.A_stronger_than_B == True:
-                winners = [seat.player,]
+            if self.dealer.A_stronger_than_B is True:
+                winners = [seat.player, ]
 
         for winner in winners:
             if winner not in self.players:
@@ -244,17 +245,18 @@ class RingList:
     def append(self,node_object=None):
         self.nodes.append(
             RingNode(index=self.length,
-                parent_ring=self,obj=node_object)
+                     parent_ring=self,
+                     obj=node_object)
         )
 
     @property
     def length(self):
         return len(self.nodes)
 
-    def assign(self,index,obj):
+    def assign(self, index,obj):
         self.nodes[index].object = obj
 
-    def remove(self,obj):
+    def remove(self, obj):
         self.nodes.remove(
             self.get_node_by(obj=obj)
         )
@@ -269,7 +271,7 @@ class RingList:
         return None
 
     def to_list(self):
-        return [ node.object for node in self.nodes ]
+        return [node.object for node in self.nodes]
 
 
 

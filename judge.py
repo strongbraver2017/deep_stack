@@ -14,8 +14,9 @@ from patterns import *
 
 
 class JudgeModel:
-    def get_type(self,five_cards):
-        if len(five_cards)!=5:
+    @staticmethod
+    def get_type(five_cards):
+        if len(five_cards) != 5:
             raise ValueError(
                 'Just support five cards judged.')
         for pattern in [
@@ -25,6 +26,6 @@ class JudgeModel:
         ]:
             test_model = pattern(five_cards)
             if test_model.judge_result:
-                #print('{}:\t{}'.format(test_model,five_cards))
+                # print('{}:\t{}'.format(test_model,five_cards))
                 return test_model
         return None

@@ -15,8 +15,8 @@ from patterns import GameCards
 from compare import CompareModel
 from itertools import combinations
 from judge import JudgeModel
-
 import time
+
 
 class Game:
     """
@@ -33,7 +33,7 @@ class Game:
         dealer = CompareModel()         #荷官，比较牌力
         stage_max_bet = 0               #某个阶段的最大下注
     """
-    def __init__(self,casino,big_blind,small_blind_seat_index):
+    def __init__(self, casino,big_blind, small_blind_seat_index):
         self.table = casino.get_free_table()
         self.table.big_blind = big_blind
         self.cards_machine = GameCards()
@@ -45,6 +45,7 @@ class Game:
         self.players_queue = RingList(size=0)
         self.dealer = CompareModel()
         self.stage_max_bet = 0
+        self.status = None
 
     def shuffle_cards(self):
         self.used_cards_buffer = []
@@ -55,7 +56,7 @@ class Game:
     def card_is_in_buffer(self,card):
         for used_card in self.used_cards_buffer:
             if used_card.suit == card.suit and \
-                used_card.value == card.value:
+               used_card.value == card.value:
                     return True
         return False
 
@@ -72,7 +73,7 @@ class Game:
         if chose_seat_index:
             seat = self.table.get_specific_seat(chose_seat_index)
         else:
-            #未指定index则随机分配空闲座位
+            # 未指定index则随机分配空闲座位
             seat = self.table.get_free_seat()
             if seat==None:
                 raise EnvironmentError('No seat could be allocated.')
@@ -108,15 +109,15 @@ class Game:
             delta = player.stack - self.table.max_buyin
             self.return_ones_chips(player,delta)
 
-    def return_ones_chips(self,player,quantity):
+    @staticmethod
+    def return_ones_chips(player, quantity):
         player.account_chips += quantity
         player.stack -= quantity
 
-    def send_cards(self,count,
-            to_players=False,to_public_area=False):
+    def send_cards(self, count, to_players=False, to_public_area=False):
         if to_players:
             for seat in self.table.seats:
-                if seat.player == None:
+                if seat.player is None:
                     continue
                 seat.player.hands.extend(self.get_x_free_cards(count))
         if to_public_area:
@@ -150,13 +151,14 @@ class Game:
             player.join_pots.append(old_pot)
         return 'bet or call'
 
-    def bet_is_allin(self,player,quantity):
+    @staticmethod
+    def bet_is_allin(player, quantity):
         return quantity >= player.stack
 
-    def fold(self,player,cuba=None):
+    def fold(self, player, cuba=None):
         self.players_queue.remove(player)
 
-    def call(self,player,cuba=None):
+    def call(self, player, cuba=None):
         self.bet(player,self.stage_max_bet)
 
     def raise_(self,player,raise_to):
@@ -164,7 +166,7 @@ class Game:
         delta = raise_to-self.stage_max_bet
         self.bet(player,delta)
 
-    def check(self,player,cuba=None):
+    def check(self, player, cuba=None):
         pass
 
     @property
@@ -200,22 +202,22 @@ class Game:
             operation_index, quantity = player.cmd_operate()
             operation_map[operation_index](player,quantity)
             if operation_index == 'r':
-                #如果有人raise表示不服，则重新开启进程环，直到他上家表态完成
+                # 如果有人raise表示不服，则重新开启进程环，直到他上家表态完成
                 first_node = node
             node = node.next
             if node==first_node:
                 print('AgreeMent Achieved!')
                 break
 
-    def basic_process(self,stage_name,status_name,count,
-            cards_to_players=False,cards_to_area=False):
+    def basic_process(self, stage_name, status_name,count,
+                      cards_to_players=False, cards_to_area=False):
         print('\n___________  {}  _____________'.format(stage_name))
         self.table.clear_just_now_buffer()
         self.status = status_name
         self.send_cards(
-            count = count,
-            to_players = cards_to_players,
-            to_public_area = cards_to_area
+            count=count,
+            to_players=cards_to_players,
+            to_public_area=cards_to_area
         )
         print('public_cards: {}'.format(self.public_pot_cards))
         self.operate()
@@ -223,40 +225,40 @@ class Game:
         for player in self.players_queue.to_list():
             player.last_bet_quantity = 0
         if self.players_queue.length<=1:
-            #其余玩家都fo牌，直接清算结束游戏
+            # 其余玩家都fo牌，直接清算结束游戏
             self.end()
             return 'game over'
 
     def preflop(self):
         self.basic_process(
-            stage_name = 'Pre Flop',
-            status_name = 'preflop',
-            count = 2,
-            cards_to_players = True
+            stage_name='Pre Flop',
+            status_name='preflop',
+            count=2,
+            cards_to_players=True
         )
 
     def flop(self):
         self.basic_process(
             stage_name='Flop',
-            status_name = 'flop',
-            count = 3,
-            cards_to_area = True
+            status_name='flop',
+            count=3,
+            cards_to_area=True
         )
 
     def turn(self):
         self.basic_process(
             stage_name='Turn',
-            status_name = 'turn',
-            count = 1,
-            cards_to_area = True
+            status_name='turn',
+            count=1,
+            cards_to_area=True
         )
 
     def river(self):
         self.basic_process(
             stage_name='River',
-            status_name = 'river',
-            count = 1,
-            cards_to_area = True
+            status_name='river',
+            count=1,
+            cards_to_area=True
         )
 
     def get_ones_max_pattern(self,player):
@@ -269,12 +271,12 @@ class Game:
         if len(temp_cards)<5:
             raise LookupError('Cards < 5')
         all_cards = list(combinations(
-            iterable = temp_cards,
-            r = 5
+            iterable=temp_cards,
+            r=5
         ))
         max_cards = all_cards[0]
         for cards in all_cards:
-            #5-7张中选五张组合（python内建的迭代工具）
+            # 5-7张中选五张组合（python内建的迭代工具）
             self.dealer.get(
                 five_cards_A=cards,
                 five_cards_B=max_cards
@@ -314,7 +316,7 @@ class Game:
         """  将玩家全部置入游戏队列   """
         for seat_index in seat_indexs:
             seat = self.table.get_specific_seat(seat_index)
-            if seat.player == None:
+            if seat.player is None:
                 continue
             seat.player.game_init_stack = seat.player.stack
             self.players_queue.append(seat.player)
@@ -327,5 +329,5 @@ class Game:
             time.sleep(1)
 
         for stage in [self.preflop, self.flop, self.turn, self.river]:
-            if stage()=='game over':
+            if stage() == 'game over':
                 return
