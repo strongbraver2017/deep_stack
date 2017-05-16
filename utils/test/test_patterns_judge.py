@@ -10,7 +10,7 @@
             本模块用于测试牌型的判断是否准确
 """
 import random,time
-from patterns import *
+from ..patterns import *
 
 cards = GameCards().to_arr()
 

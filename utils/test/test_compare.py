@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 @file:      test_compare
 @author:    lyn
@@ -10,26 +10,27 @@
         测试二元牌型的牌力比较
 """
 
-import random,time
+import time
+
 from compare import CompareModel
 from patterns import GameCards
 
 cards_machine = GameCards()
 all_cards = GameCards().to_arr()
 
-while(1):
+while (1):
     cardsA = cards_machine.get_random_x(
-        x=5,ext_cards=all_cards)
+        x=5, ext_cards=all_cards)
     cardsB = cards_machine.get_random_x(
         x=5, ext_cards=all_cards)
 
     cp = CompareModel()
 
-    cp.get(cardsA,cardsB)
+    cp.get(cardsA, cardsB)
 
     st = cp.A_stronger_than_B
 
-    if st=='draw':
+    if st == 'draw':
         res = '='
     else:
         if st:
@@ -38,8 +39,7 @@ while(1):
             res = '<'
 
     print('{} {} {}'.format(
-        cardsA,res,cardsB))
-
+        cardsA, res, cardsB))
 
     time.sleep(0.1)
 

@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 @file:      judge.py
 @author:    lyn
@@ -10,7 +10,7 @@
         对于牌型的判定
 """
 
-from patterns import *
+from .patterns import *
 
 
 class JudgeModel:

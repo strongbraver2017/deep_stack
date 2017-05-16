@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 @file:      game.py
 @author:    lyn
@@ -10,12 +10,13 @@
         保存德州扑克游戏逻辑
 """
 
-from role import Pot, RingList, Player
-from patterns import GameCards
-from compare import CompareModel
-from itertools import combinations
-from judge import JudgeModel
 import time
+from itertools import combinations
+
+from .compare import CompareModel
+from .judge import JudgeModel
+from .patterns import GameCards
+from .role import Pot, RingList, Player
 
 
 class Game:
@@ -33,7 +34,8 @@ class Game:
         dealer = CompareModel()         #荷官，比较牌力
         stage_max_bet = 0               #某个阶段的最大下注
     """
-    def __init__(self, casino,big_blind, small_blind_seat_index):
+
+    def __init__(self, casino, big_blind, small_blind_seat_index):
         self.table = casino.get_free_table()
         self.table.big_blind = big_blind
         self.cards_machine = GameCards()
@@ -51,63 +53,63 @@ class Game:
         self.used_cards_buffer = []
         self.public_pot_cards = []
         self.players_queue = RingList(size=0)
-        self.table.pots = [Pot(),]
+        self.table.pots = [Pot(), ]
 
-    def card_is_in_buffer(self,card):
+    def card_is_in_buffer(self, card):
         for used_card in self.used_cards_buffer:
             if used_card.suit == card.suit and \
-               used_card.value == card.value:
-                    return True
+                            used_card.value == card.value:
+                return True
         return False
 
-    def get_x_free_cards(self,count):
+    def get_x_free_cards(self, count):
         cards = self.cards_machine.get_random_x(
-            x = count,
-            ext_cards = self.full_cards,
-            except_cards = self.used_cards_buffer
+            x=count,
+            ext_cards=self.full_cards,
+            except_cards=self.used_cards_buffer
         )
         self.used_cards_buffer.extend(cards)
         return cards
 
-    def add_player(self,player,chose_buyin,chose_seat_index=None):
+    def add_player(self, player, chose_buyin, chose_seat_index=None):
         if chose_seat_index:
             seat = self.table.get_specific_seat(chose_seat_index)
         else:
             # 未指定index则随机分配空闲座位
             seat = self.table.get_free_seat()
-            if seat==None:
+            if seat is None:
                 raise EnvironmentError('No seat could be allocated.')
         seat.sit(player)
         self.add_ones_chips(player, chose_buyin)
 
-    def add_AI(self,size):
+    def add_AI(self, size):
         import random
         for i in range(size):
             try:
                 self.add_player(
                     player=Player(),
-                    chose_buyin= random.choice(
-                        range(self.table.min_buyin,self.table.max_buyin)
+                    chose_buyin=random.choice(
+                        range(self.table.min_buyin, self.table.max_buyin)
                     )
                 )
             except EnvironmentError:
                 break
         return
 
-    def rm_seat(self,seat_index):
+    def rm_seat(self, seat_index):
         seat = self.table.get_specific_seat(seat_index)
         self.return_ones_chips(
-            player = seat.player,
-            quantity = seat.player.stack
+            player=seat.player,
+            quantity=seat.player.stack
         )
         seat.go()
 
-    def add_ones_chips(self,player,quantity):
+    def add_ones_chips(self, player, quantity):
         player.account_chips -= quantity
         player.stack += quantity
         if player.stack > self.table.max_buyin:
             delta = player.stack - self.table.max_buyin
-            self.return_ones_chips(player,delta)
+            self.return_ones_chips(player, delta)
 
     @staticmethod
     def return_ones_chips(player, quantity):
@@ -123,11 +125,11 @@ class Game:
         if to_public_area:
             self.public_pot_cards.extend(self.get_x_free_cards(count))
 
-    def bet(self,player,quantity):
+    def bet(self, player, quantity):
         player.stack -= quantity
         player.last_bet_quantity += quantity
-        if self.table.sb_allin_just_now and\
-                self.table.previous_allin_value < quantity:
+        if self.table.sb_allin_just_now and \
+                        self.table.previous_allin_value < quantity:
             """ 新建底池,并添加该玩家入池 """
             new_pot = Pot()
             new_pot.players.append(player)
@@ -140,7 +142,7 @@ class Game:
             self.table.pots[-2].size += call_val
             self.table.pots[-1].size += raise_delta
             return 'raise'
-        if self.bet_is_allin(player,quantity):
+        if self.bet_is_allin(player, quantity):
             player.status = 'allin'
             self.table.sb_allin_just_now = True
             self.table.previous_allin_value = quantity
@@ -159,12 +161,12 @@ class Game:
         self.players_queue.remove(player)
 
     def call(self, player, cuba=None):
-        self.bet(player,self.stage_max_bet)
+        self.bet(player, self.stage_max_bet)
 
-    def raise_(self,player,raise_to):
+    def raise_(self, player, raise_to):
         self.call(player)
-        delta = raise_to-self.stage_max_bet
-        self.bet(player,delta)
+        delta = raise_to - self.stage_max_bet
+        self.bet(player, delta)
 
     def check(self, player, cuba=None):
         pass
@@ -196,20 +198,20 @@ class Game:
             except LookupError:
                 pass
             """ 检测是否是待call状态 """
-            if self.stage_max_bet>0:
+            if self.stage_max_bet > 0:
                 delta = self.stage_max_bet - player.last_bet_quantity
                 print('you have to agree someones bet: {} or fold.'.format(delta))
             operation_index, quantity = player.cmd_operate()
-            operation_map[operation_index](player,quantity)
+            operation_map[operation_index](player, quantity)
             if operation_index == 'r':
                 # 如果有人raise表示不服，则重新开启进程环，直到他上家表态完成
                 first_node = node
             node = node.next
-            if node==first_node:
+            if node == first_node:
                 print('AgreeMent Achieved!')
                 break
 
-    def basic_process(self, stage_name, status_name,count,
+    def basic_process(self, stage_name, status_name, count,
                       cards_to_players=False, cards_to_area=False):
         print('\n___________  {}  _____________'.format(stage_name))
         self.table.clear_just_now_buffer()
@@ -224,7 +226,7 @@ class Game:
         self.stage_max_bet = 0
         for player in self.players_queue.to_list():
             player.last_bet_quantity = 0
-        if self.players_queue.length<=1:
+        if self.players_queue.length <= 1:
             # 其余玩家都fo牌，直接清算结束游戏
             self.end()
             return 'game over'
@@ -261,14 +263,14 @@ class Game:
             cards_to_area=True
         )
 
-    def get_ones_max_pattern(self,player):
+    def get_ones_max_pattern(self, player):
         """ 得到某玩家5-7张牌中的最大牌型 """
         temp_cards = []
         temp_cards.extend(self.public_pot_cards)
         temp_cards.extend(player.hands)
-        print('temp_cards: ',temp_cards)
+        print('temp_cards: ', temp_cards)
 
-        if len(temp_cards)<5:
+        if len(temp_cards) < 5:
             raise LookupError('Cards < 5')
         all_cards = list(combinations(
             iterable=temp_cards,
@@ -311,8 +313,8 @@ class Game:
         big_blind = self.table.get_specific_seat(
             seat_index=seat_indexs[1]
         ).player
-        self.bet(player=small_blind,quantity=0.5*self.big_blind)
-        self.bet(player=big_blind, quantity=1*self.big_blind)
+        self.bet(player=small_blind, quantity=0.5 * self.big_blind)
+        self.bet(player=big_blind, quantity=1 * self.big_blind)
         """  将玩家全部置入游戏队列   """
         for seat_index in seat_indexs:
             seat = self.table.get_specific_seat(seat_index)
@@ -323,7 +325,7 @@ class Game:
 
         print(self.table)
 
-        while self.players_queue.length<2:
+        while self.players_queue.length < 2:
             print('waiting for players join...')
             print(self.table)
             time.sleep(1)

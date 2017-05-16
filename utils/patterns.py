@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 @file:      patterns.py
 @author:    lyn
@@ -24,9 +24,9 @@ class CardPattern:
         单元牌型
     """
 
-    def __init__(self,val,suit):
-        self.value = val   # 牌面数值
-        self.suit = suit   # 花色
+    def __init__(self, val, suit):
+        self.value = val  # 牌面数值
+        self.suit = suit  # 花色
 
     def __repr__(self):
         value = self.value
@@ -34,7 +34,7 @@ class CardPattern:
             value = NameMap[self.value]
         return (
             "{}{}"
-        ).format(value,self.suit[0])
+        ).format(value, self.suit[0])
 
 
 class GameCards:
@@ -45,17 +45,18 @@ class GameCards:
     # 数值域
 
     SuitMap = ['heart', 'spade', 'clover', 'diamond']
+
     # 花色域
 
     def to_arr(self):
         cards = []
         for val in self.ValueMap:
             for suit in self.SuitMap:
-                card = CardPattern(val,suit)
+                card = CardPattern(val, suit)
                 cards.append(card)
         return cards
 
-    def get_random_x(self,x,ext_cards=None,except_cards=None):
+    def get_random_x(self, x, ext_cards=None, except_cards=None):
         import random
         if ext_cards is None:
             cards = self.to_arr()
@@ -98,13 +99,13 @@ class GroupPattern:
     """
     suit_list = []
     value_list = []
-    suit_set = set()    #花色值域
-    value_set = set()   #牌面大小值域
+    suit_set = set()  # 花色值域
+    value_set = set()  # 牌面大小值域
     name = 'Basic Pattern'
 
     def __init__(self, name, five_cards):
-        self.name = name     #牌型名称
-        self.value = GroupMap[name]     #组合大小权值（用于排序牌力）
+        self.name = name  # 牌型名称
+        self.value = GroupMap[name]  # 组合大小权值（用于排序牌力）
         self.five_cards = five_cards
         self.suit_list = [card.suit for card in self.five_cards]
         self.suit_set = set(self.suit_list)
@@ -128,7 +129,7 @@ class GroupPattern:
                 .format(self.name)
         )
 
-    def get_x_value(self,count,list=False,need_check=True):
+    def get_x_value(self, count, list=False, need_check=True):
         if need_check and not self.judge_result:
             self.raise_TypeError()
         keys = []
@@ -140,7 +141,7 @@ class GroupPattern:
                     keys.append(key)
         return keys
 
-    def trans_val(self,val):
+    def trans_val(self, val):
         value = val
         if value in NameMap.keys():
             value = NameMap[value]
@@ -153,10 +154,11 @@ class GroupPattern:
     @property
     def the_single_Values(self):
         vals = self.get_x_value(
-            count=1,list=True,need_check=False)
+            count=1, list=True, need_check=False)
         vals.sort()
         vals.reverse()
         return vals
+
 
 """
     以下为具体牌型
@@ -170,7 +172,7 @@ class FullHouse(GroupPattern):
 
     name = 'Full House'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             name=self.name,
@@ -179,9 +181,9 @@ class FullHouse(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.value_set)==2 and \
-               max(*self.value_map.values())==3
-              # 四条时最大相同值的键数应为4
+        return len(self.value_set) == 2 and \
+               max(*self.value_map.values()) == 3
+        # 四条时最大相同值的键数应为4
 
     @property
     def the_three_Value(self):
@@ -189,13 +191,13 @@ class FullHouse(GroupPattern):
 
     @property
     def the_two_Value(self):
-         return self.get_x_value(count=2)
+        return self.get_x_value(count=2)
 
     def __repr__(self):
         val1 = self.trans_val(self.the_three_Value)
         val2 = self.trans_val(self.the_two_Value)
         return 'Full House, {} and {}: {}'.format(
-            val1,val2, self.five_cards)
+            val1, val2, self.five_cards)
 
 
 class Flush(GroupPattern):
@@ -204,7 +206,7 @@ class Flush(GroupPattern):
     """
     name = 'Flush'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             name=self.name,
@@ -217,7 +219,7 @@ class Flush(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.max_val)
-        return 'Flush , {} High: {}'.format(val,self.five_cards)
+        return 'Flush , {} High: {}'.format(val, self.five_cards)
 
 
 class FourOfOneKind(GroupPattern):
@@ -226,7 +228,7 @@ class FourOfOneKind(GroupPattern):
     """
     name = 'Four Of One Kind'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             name=self.name,
@@ -236,7 +238,7 @@ class FourOfOneKind(GroupPattern):
     def judge(self):
         self._judge()
         return len(self.value_set) == 2 and \
-            max(*self.value_map.values()) == 4
+               max(*self.value_map.values()) == 4
 
     @property
     def the_four_Value(self):
@@ -248,7 +250,7 @@ class FourOfOneKind(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.the_four_Value)
-        return 'King of {}: {}'.format(val,self.five_cards)
+        return 'King of {}: {}'.format(val, self.five_cards)
 
 
 class Straight(GroupPattern):
@@ -257,7 +259,7 @@ class Straight(GroupPattern):
     """
     name = 'Straight'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             name=self.name,
@@ -266,13 +268,13 @@ class Straight(GroupPattern):
 
     def judge(self):
         self._judge()
-        #一是首尾之差为4，二是无重复元素
-        return max(*self.value_set)-min(*self.value_set) == 4 and\
-            len(self.value_set) == 5
+        # 一是首尾之差为4，二是无重复元素
+        return max(*self.value_set) - min(*self.value_set) == 4 and \
+               len(self.value_set) == 5
 
     def __repr__(self):
         val1 = self.trans_val(self.max_val)
-        val2 = self.trans_val(self.max_val-4)
+        val2 = self.trans_val(self.max_val - 4)
         return 'Straight , {} to {}: {}'.format(
             val2, val1, self.five_cards)
 
@@ -283,7 +285,7 @@ class StraightFlush(GroupPattern):
     """
     name = 'Straight Flush'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             name=self.name,
@@ -292,13 +294,13 @@ class StraightFlush(GroupPattern):
 
     def judge(self):
         self._judge()
-        return Straight(self.five_cards).judge_result and\
-            Flush(self.five_cards).judge_result
+        return Straight(self.five_cards).judge_result and \
+               Flush(self.five_cards).judge_result
 
     def __repr__(self):
         val = self.trans_val(self.max_val)
         return 'Straight Flush, {} to {}: {}'.format(
-            val-4,val, self.five_cards)
+            val - 4, val, self.five_cards)
 
 
 class RoyalFlush(GroupPattern):
@@ -307,7 +309,7 @@ class RoyalFlush(GroupPattern):
     """
     name = 'Royal Flush'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             five_cards=five_cards,
@@ -316,8 +318,8 @@ class RoyalFlush(GroupPattern):
 
     def judge(self):
         self._judge()
-        return StraightFlush(self.five_cards).judge_result and\
-            self.max_val == 14
+        return StraightFlush(self.five_cards).judge_result and \
+               self.max_val == 14
 
     def __repr__(self):
         return 'Royal Flush: {}'.format(self.five_cards)
@@ -329,7 +331,7 @@ class Set(GroupPattern):
     """
     name = 'Set'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             five_cards=five_cards,
@@ -347,7 +349,7 @@ class Set(GroupPattern):
 
     def __repr__(self):
         val = self.trans_val(self.the_three_Value)
-        return 'Set of {}: {}'.format(val,self.five_cards)
+        return 'Set of {}: {}'.format(val, self.five_cards)
 
 
 class TwoPairs(GroupPattern):
@@ -356,16 +358,16 @@ class TwoPairs(GroupPattern):
     """
     name = 'Two Pairs'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(self,
-              five_cards=five_cards,
-              name=self.name
-        )
+                              five_cards=five_cards,
+                              name=self.name
+                              )
 
     def judge(self):
         self._judge()
         return len(
-            self.get_x_value(count=2,list=True,need_check=False)
+            self.get_x_value(count=2, list=True, need_check=False)
         ) == 2
 
     @property
@@ -384,7 +386,7 @@ class TwoPairs(GroupPattern):
         val1 = self.trans_val(self.the_big_pair_Value)
         val2 = self.trans_val(self.the_small_pair_Value)
         return 'Pairs of {} and {}: {}'.format(
-            val1,val2,self.five_cards)
+            val1, val2, self.five_cards)
 
 
 class OnePair(GroupPattern):
@@ -393,7 +395,7 @@ class OnePair(GroupPattern):
     """
     name = 'One Pair'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             five_cards=five_cards,
@@ -402,8 +404,8 @@ class OnePair(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.get_x_value(count=2,list=True,need_check=False))==1 and \
-                len(self.get_x_value(count=1,list=True,need_check=False))==3
+        return len(self.get_x_value(count=2, list=True, need_check=False)) == 1 and \
+               len(self.get_x_value(count=1, list=True, need_check=False)) == 3
 
     @property
     def the_pair_Value(self):
@@ -411,7 +413,7 @@ class OnePair(GroupPattern):
 
     def __repr__(self):
         value = self.trans_val(self.the_pair_Value)
-        return 'One Pair of {}: {}'.format(value,self.five_cards)
+        return 'One Pair of {}: {}'.format(value, self.five_cards)
 
 
 class HighCard(GroupPattern):
@@ -420,7 +422,7 @@ class HighCard(GroupPattern):
     """
     name = 'High Card'
 
-    def __init__(self,five_cards):
+    def __init__(self, five_cards):
         GroupPattern.__init__(
             self,
             five_cards=five_cards,
@@ -429,10 +431,10 @@ class HighCard(GroupPattern):
 
     def judge(self):
         self._judge()
-        return len(self.get_x_value(count=1,list=True,need_check=False))==5 and \
-            not Straight(self.five_cards).judge_result and \
-            not Flush(self.five_cards).judge_result
+        return len(self.get_x_value(count=1, list=True, need_check=False)) == 5 and \
+               not Straight(self.five_cards).judge_result and \
+               not Flush(self.five_cards).judge_result
 
     def __repr__(self):
         value = self.trans_val(self.max_val)
-        return '{} High: {}'.format(value,self.five_cards)
+        return '{} High: {}'.format(value, self.five_cards)
